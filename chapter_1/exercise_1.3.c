@@ -1,9 +1,9 @@
 #include <stdio.h>
 
+/* A heading above the table */
+
 int main()
 {
-	/* A heading above the table */
-
 	float fahr, celsius;
 	int lower, upper, step;
 
