@@ -20,6 +20,7 @@ int main()
 	itoa(i, buffer);
 	printf("%d\n%s\n", i, buffer);
 	printf("\n");
+
 	itoa(INT_MIN, buffer);
 	printf("%d\n%s\n", INT_MIN, buffer);
 
@@ -36,9 +37,12 @@ void itoa(int n, char s[])
 	do
 		s[i++] = abs(n % 10) + '0';
 	while (n /= 10);
+
 	if (sign < 0)
 		s[i++] = '-';
+
 	s[i] = '\0';
+
 	reverse(s);
 }
 void reverse(char s[])
@@ -51,8 +55,3 @@ void reverse(char s[])
 		s[j] = c;
 	}
 }
-
-
-
-
-
