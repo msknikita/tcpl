@@ -1,11 +1,12 @@
 /* Extend entab and detab to accept the shorthand entab -m +n to mean tab stops every n columns;
- * starting at column m. Choose convenient size for the default behaviour 
+ * starting at column m. Choose convenient size for the default behaviour
  */
 
 #include<stdio.h>
+#include<stdlib.h>
 
 #define MAXLINES 50 
-#define NSTR 10 
+#define NSTR 10
 #define MAXSTOR 5000
 
 int setnumlines(int, char *[]);
@@ -16,8 +17,8 @@ char *lineptr[MAXLINES];
 
 int main(int argc, char *argv[])
 {
-	int nlines; 
-	int n; 
+	int nlines;
+	int n;
 
 	n = setnumlines(argc, argv);
 
@@ -29,8 +30,6 @@ int main(int argc, char *argv[])
 		printf("error\n");
 		return 1;
 	}
-
-	return 0;
 }
 
 #define MAXLEN 1000
@@ -78,13 +77,16 @@ int setnumlines(int argc, char *argv[])
 {
 	int n;
 
-	while (--argc > 0 && **++argv == '-') {
-		if ((n = atoi(*argv + 1)) > 0)
-			return n;
-		else
-			return 0;
-	}
-	return NSTR;
+	if (argc == 1)
+		n = NSTR;
+	else if (argc == 2 && (*++argv)[0] == '-')
+		n = atoi(argv[0] + 1);
+	else
+		perror("tail: cannot allocate buf");
+	if (n < 1 || n > MAXLINES)
+		n = NSTR;
+
+	return n;
 }
 
 void tail(char *lineptr[], int nlines, int n)
