@@ -1,5 +1,5 @@
-/* Modify the sort program to handle a -r flag, which indicates sorting in reverse(decreasing) order. 
- * Be sure that -r works with -n.
+/* Add the option -f to fold upper and lower case together, so that case distinctions are not made during sorting;
+ * for example, a and A compare equal.
  */
 
 #include <stdio.h>
@@ -8,11 +8,13 @@
 #define NUMERIC   1 
 #define DECR      2 
 #define LINES     100  
+#define FOLD      4
 
 int numcmp(char *, char *);
 int readlines(char *lineptr[], int);
 void quicksort(void *v[], int, int, int(*comp)(void *, void *));
 void writelines(char *lineptr[], int, int);
+int charcmp(char *, char *);
 
 static char option = 0;
 
@@ -31,6 +33,9 @@ int main(int argc, char *argv[])
 			case 'r': 
 				option |= DECR;
 				break;
+			case 'f':
+				option |= FOLD;
+				break;
 			default:
 				printf("sort:illegal option %c\n", c);
 				argc = 1;
@@ -44,6 +49,8 @@ int main(int argc, char *argv[])
 		if ((nlines = readlines(lineptr, LINES)) > 0) {
 			if (option & NUMERIC)
 				quicksort((void **)lineptr, 0, nlines - 1, (int(*)(void *, void *))numcmp);
+			else if(option & FOLD)
+				quicksort((void **)lineptr, 0, nlines - 1, (int(*)(void *, void *))charcmp);
 			else
 				quicksort((void **)lineptr, 0, nlines - 1, (int(*)(void *, void *))strcmp);
 
@@ -69,7 +76,8 @@ void writelines(char *lineptr[], int nlines, int decr)
 			printf("%s\n", lineptr[i]);
 }
 
-#include<stdlib.h>
+#include <stdlib.h>
+#include <ctype.h>
 
 int numcmp(char *s1, char *s2)
 {
@@ -84,6 +92,14 @@ int numcmp(char *s1, char *s2)
 		return 1;
 	else
 		return 0;
+}
+
+int charcmp(char *s, char *t)
+{
+	for (; tolower(*s) == tolower(*t); ++s, ++t)
+		if (*s == '\0')
+			return 0;
+	return tolower(*s) - tolower(*t);
 }
 
 #define MAXLEN 1000
