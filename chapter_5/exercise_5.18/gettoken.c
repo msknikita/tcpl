@@ -4,23 +4,15 @@
 
 extern char token[];
 extern int tokentype;
-extern int prevtoken = NO;
 
 int gettoken(void)
 {
-	int c, getch(void);
+	int c;
 	void ungetch(int);
 	char *p = token;
 
-	if (prevtoken == YES) {
-		prevtoken = NO;
-		return tokentype;
-	}
-
-	while ((c = getch()) == ' ' || c == '\t');
-
-	if (c == '(') {
-		if ((c = getch()) == ')') {
+	if ((c = getter()) == '(') {
+		if ((c = getter()) == ')') {
 			strcpy(token, "()");
 			return tokentype = PARENS;
 		}
@@ -30,9 +22,8 @@ int gettoken(void)
 		}
 	}
 	else if (c == '[') {
-		for (*p++ = c; (*p++ = getch()) != ']'; );
+		for (*p++ = c; (*p++ = getter()) != ']'; );
 		*p = '\0';
-
 		return tokentype = BRACKETS;
 	}
 	else if (isalpha(c)) {
@@ -40,9 +31,16 @@ int gettoken(void)
 			*p++ = c;
 		*p = '\0';
 		ungetch(c);
-
 		return tokentype = NAME;
 	}
 	else
 		return tokentype = c;
+}
+
+int getter(void)
+{
+	int c;
+
+	while ((c = getch()) == ' ' || c == '\t');
+	return c;
 }
