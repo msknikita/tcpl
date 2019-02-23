@@ -9,11 +9,19 @@
 #define BUFSIZ   1024
 #define OPEN_MAX 20
 
+struct flags {
+	unsigned int fread : 1;
+	unsigned int fwrite : 1;
+	unsigned int is_unbuf : 1;
+	unsigned int _feof : 1;
+	unsigned int ferr : 1;
+};
+
 typedef struct iobuf {
 	int cnt;
 	char *ptr;
 	char *base;
-	int flag;
+	struct flags flag;
 	int fd;
 } FILE;
 
@@ -23,14 +31,6 @@ FILE _iob[OPEN_MAX];
 #define stdin  (&iob[0])
 #define stdout (&iob[1])
 #define stderr (&iob[2])
-
-struct flags {
-	unsigned int is_read : 1; 
-	unsigned int is_write : 1; 
-	unsigned int is_unbuf : 1; 
-	unsigned int is_eof : 1; 
-	unsigned int is_err : 1; 
-};
 
 int _fillbuf(FILE *);
 int _flushbuf(int, FILE *);
@@ -55,8 +55,7 @@ int main(int argc, char *argv[])
 	FILE *fp;
 	char line[MAXLINE], *prog = argv[0];
 	char *buf = malloc(1024 * 1024);
-	int i = 0;
-	char c;
+	int c, i = 0;
 
 	while (--argc > 0) {
 		if ((fp = fopen(*++argv, "r")) == NULL)
@@ -82,10 +81,10 @@ FILE *fopen(char *name, char *mode)
 		return NULL;
 
 	for (fp = _iob; fp < _iob + OPEN_MAX; fp++)
-		if (fp->flag.is_read == 0 && fp->flag.is_write == 0)
-			break;  
+		if (fp->flag.fread == 0 && fp->flag.fwrite == 0)
+			break;
 
-	if (fp >= _iob + OPEN_MAX)  
+	if (fp >= _iob + OPEN_MAX)
 		return NULL;
 
 	if (*mode == 'w')
@@ -98,7 +97,7 @@ FILE *fopen(char *name, char *mode)
 	else
 		fd = open(name, O_RDONLY, 0);
 
-	if (fd == -1) 
+	if (fd == -1)
 		return NULL;
 
 	fp->fd = fd;
@@ -106,12 +105,12 @@ FILE *fopen(char *name, char *mode)
 	fp->base = NULL;
 
 	if (*mode == 'r') {
-		fp->flag.is_read = 1;
-		fp->flag.is_write = 0;
+		fp->flag.fread = 1;
+		fp->flag.fwrite = 0;
 	}
 	else {
-		fp->flag.is_read = 0;
-		fp->flag.is_write = 1;
+		fp->flag.fread = 0;
+		fp->flag.fwrite = 1;
 	}
 
 	return fp;
@@ -121,12 +120,12 @@ int _fillbuf(FILE *fp)
 {
 	int bufsize;
 
-	if (fp->flag.is_read == 0 || fp->flag.is_eof == 1 || fp->flag.is_err == 1)
+	if (fp->flag.fread == 0 || fp->flag._feof == 1 || fp->flag.ferr == 1)
 		return EOF;
 
 	bufsize = (fp->flag.is_unbuf == 1) ? 1 : BUFSIZ;
 
-	if (fp->base == NULL) 
+	if (fp->base == NULL)
 		if ((fp->base = (char *)malloc(bufsize)) == NULL)
 			return EOF;
 
@@ -135,9 +134,9 @@ int _fillbuf(FILE *fp)
 
 	if (--fp->cnt < 0) {
 		if (fp->cnt == -1)
-			fp->flag.is_eof = 1;
+			fp->flag._feof = 1;
 		else
-			fp->flag.is_err = 1;
+			fp->flag.ferr = 1;
 		fp->cnt = 0;
 		return EOF;
 	}
